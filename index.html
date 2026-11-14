@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Door Prize Picker</title>
+<meta name="description" content="Pick random winning ticket numbers for door prizes and print them for a poster board.">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Door Prize Picker">
+<meta property="og:description" content="Type in your ticket numbers, pick the winners, print the poster.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='14' width='56' height='36' rx='6' fill='%23b3261e'/%3E%3Ccircle cx='4' cy='32' r='7' fill='%23fff'/%3E%3Ccircle cx='60' cy='32' r='7' fill='%23fff'/%3E%3Ctext x='32' y='40' font-family='Arial' font-weight='700' font-size='22' fill='%23fff' text-anchor='middle'%3E%23%3C/text%3E%3C/svg%3E">
+<style id="pageStyle">@page { size: letter portrait; margin: 0.5in; }</style>
+<style>
+:root {
+  --bg: #f7f2ea;
+  --surface: #ffffff;
+  --ink: #1f1a14;
+  --muted: #625a51;
+  --line: #ddd3c4;
+  --accent: #b3261e;
+  --accent-hover: #951f18;
+  --accent-ink: #ffffff;
+  --soft: #efe7da;
+  --soft-hover: #e5dac9;
+  --error-bg: #fdecea;
+  --error-ink: #8a1c13;
+  --ok-bg: #e8f3e8;
+  --ok-ink: #1f5b22;
+  --new: #2e7d32;
+  --focus: #1a5fb4;
+  --shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 24px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1b1814;
+    --surface: #26221d;
+    --ink: #f3ede4;
+    --muted: #b8ada0;
+    --line: #3d362e;
+    --accent: #e0564c;
+    --accent-hover: #ea6d64;
+    --accent-ink: #1b1814;
+    --soft: #332d26;
+    --soft-hover: #3f3830;
+    --error-bg: #3d1f1b;
+    --error-ink: #ffb4ab;
+    --ok-bg: #1e3320;
+    --ok-ink: #a8dbaa;
+    --new: #6fcf73;
+    --focus: #8ab4f8;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 24px rgba(0,0,0,.35);
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 18px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+main { max-width: 660px; margin: 0 auto; padding: 28px 16px 48px; }
+h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.01em; }
+h2 { font-size: 1.35rem; margin: 0 0 4px; }
+p { margin: 0 0 12px; }
+.lede { color: var(--muted); margin-bottom: 24px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}
+label { display: block; font-weight: 600; margin-bottom: 6px; }
+.field { margin-bottom: 18px; }
+.hint { display: block; font-weight: 400; color: var(--muted); font-size: 0.9rem; }
+input[type=text] {
+  width: 100%;
+  font: inherit;
+  font-size: 1.25rem;
+  padding: 12px 14px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+}
+input[type=text]:focus { outline: none; border-color: var(--focus); }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 420px) { .row { grid-template-columns: 1fr; gap: 0; } }
+button {
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.1rem;
+  min-height: 52px;
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+}
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); width: 100%; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-soft { background: var(--soft); color: var(--ink); }
+.btn-soft:hover { background: var(--soft-hover); }
+.btn-plain { background: transparent; color: var(--muted); text-decoration: underline; min-height: 44px; padding: 8px 4px; font-weight: 600; }
+.actions { display: grid; gap: 10px; }
+.actions-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.msg { border-radius: 10px; padding: 12px 14px; margin: 0 0 16px; font-weight: 600; }
+.msg.error { background: var(--error-bg); color: var(--error-ink); }
+.msg.ok { background: var(--ok-bg); color: var(--ok-ink); }
+.summary { color: var(--muted); margin-bottom: 16px; }
+.picked { color: var(--muted); font-size: 0.9rem; margin: 10px 0 0; }
+fieldset { border: 0; padding: 0; margin: 0 0 18px; }
+legend { font-weight: 600; margin-bottom: 6px; padding: 0; }
+.choices { display: flex; gap: 10px; flex-wrap: wrap; }
+.choice {
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600;
+  border: 2px solid var(--line); border-radius: 10px;
+  padding: 10px 14px; cursor: pointer; margin: 0;
+}
+.choice input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.choice:has(input:checked) { border-color: var(--accent); }
+.footnote { color: var(--muted); font-size: 0.9rem; }
+.legend-new { color: var(--new); font-weight: 700; }
+
+/* Poster preview */
+.poster-frame { position: relative; overflow: hidden; margin: 4px 0 6px; background: var(--soft); border-radius: 10px; }
+h2[tabindex]:focus { outline: none; }
+.poster {
+  position: absolute; top: 0; left: 0;
+  transform-origin: top left;
+  background: #fff;
+  color: #111;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25), 0 4px 16px rgba(0,0,0,.12);
+  padding: 0.35in;
+  display: flex; flex-direction: column;
+}
+.poster.tall { width: 7.4in; height: 9.7in; }
+.poster.wide { width: 9.7in; height: 7.3in; }
+.p-title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 0.72in;
+  line-height: 1.08;
+  text-align: center;
+  margin: 0 0 0.08in;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.p-rule { height: 0; border-top: 0.05in solid #111; margin: 0 1.2in 0.22in; flex: none; }
+.p-grid {
+  flex: 1 1 0; min-height: 0;
+  display: grid;
+  align-content: safe center;
+}
+.tile {
+  display: flex; align-items: center; justify-content: center;
+  border: max(2px, 0.035em) solid #111;
+  border-radius: 0.16em;
+  font-family: "Helvetica Neue", Arial, system-ui, sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.p-note {
+  flex: none;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.36in;
+  line-height: 1.2;
+  text-align: center;
+  margin: 0.2in 0 0;
+  overflow-wrap: anywhere;
+}
+@media screen {
+  .tile.is-new { background: #e3f2e3; border-color: #2e7d32; color: #1b5e20; }
+}
+
+@media print {
+  html, body { background: #fff !important; }
+  body { margin: 0; }
+  main { max-width: none; margin: 0; padding: 0; }
+  .screen-only { display: none !important; }
+  .card { border: 0; box-shadow: none; padding: 0; margin: 0; background: #fff; }
+  .poster-frame { height: auto !important; overflow: visible; margin: 0; }
+  .poster-frame { background: none; border-radius: 0; }
+  .poster { position: static; transform: none !important; box-shadow: none; left: 0 !important; top: 0 !important; break-inside: avoid; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="screen-only">
+    <h1>Door Prize Picker</h1>
+    <p class="lede">Type in your first and last ticket numbers and how many door prizes you have. The picker draws the winning numbers at random, with no repeats. Then print them for your poster board.</p>
+  </header>
+
+  <!-- Step 1: set up and pick -->
+  <section id="setup" class="card screen-only" aria-labelledby="setupHead">
+    <h2 id="setupHead" style="margin-bottom:16px">Your tickets</h2>
+    <div id="setupMsg" class="msg error" role="alert" hidden></div>
+    <form id="setupForm" novalidate>
+      <div class="row">
+        <div class="field">
+          <label for="first">First ticket number</label>
+          <input type="text" id="first" inputmode="numeric" autocomplete="off" placeholder="e.g. 1">
+        </div>
+        <div class="field">
+          <label for="last">Last ticket number</label>
+          <input type="text" id="last" inputmode="numeric" autocomplete="off" placeholder="e.g. 500">
+        </div>
+      </div>
+      <div class="field">
+        <label for="count">How many door prizes?</label>
+        <input type="text" id="count" inputmode="numeric" autocomplete="off" placeholder="e.g. 25">
+      </div>
+      <button type="submit" class="btn-primary">Pick the winning numbers</button>
+    </form>
+  </section>
+
+  <!-- Step 2: results, poster, print -->
+  <section id="results" hidden aria-labelledby="resultsHead">
+    <div class="card">
+      <div class="screen-only">
+        <h2 id="resultsHead" tabindex="-1">Winning numbers</h2>
+        <p id="summary" class="summary"></p>
+        <div id="resultMsg" class="msg ok" role="status" hidden></div>
+      </div>
+      <div id="posterFrame" class="poster-frame">
+        <div id="poster" class="poster tall">
+          <h3 id="pTitle" class="p-title"></h3>
+          <div id="pRule" class="p-rule"></div>
+          <div id="pGrid" class="p-grid"></div>
+          <p id="pNote" class="p-note"></p>
+        </div>
+      </div>
+      <p id="picked" class="picked screen-only"></p>
+    </div>
+
+    <div class="card screen-only">
+      <div class="actions">
+        <button type="button" id="printBtn" class="btn-primary">Print the poster</button>
+      </div>
+      <p class="footnote" style="margin:12px 0 0">To have a print shop make it poster size, choose "Save as PDF" in the print window and take them the file.</p>
+    </div>
+
+    <div class="card screen-only">
+      <h2 style="margin-bottom:14px">Poster words</h2>
+      <div class="field">
+        <label for="title">Heading</label>
+        <input type="text" id="title" autocomplete="off" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="note">Line at the bottom <span class="hint">Optional. Leave it blank to skip it.</span></label>
+        <input type="text" id="note" autocomplete="off" maxlength="140">
+      </div>
+      <fieldset>
+        <legend>Poster shape</legend>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="shape" value="tall"> Tall</label>
+          <label class="choice"><input type="radio" name="shape" value="wide"> Wide</label>
+        </div>
+        <span class="hint" style="margin-top:8px">If "Wide" prints cut off, pick "Landscape" in the print window.</span>
+      </fieldset>
+    </div>
+
+    <div class="card screen-only">
+      <h2>Need more winners?</h2>
+      <p class="summary" style="margin-bottom:14px">Adds more numbers to the board. It never repeats a number that's already on it.</p>
+      <div id="moreMsg" class="msg error" role="alert" hidden></div>
+      <form id="moreForm" novalidate>
+        <div class="field">
+          <label for="moreCount">How many more?</label>
+          <input type="text" id="moreCount" inputmode="numeric" autocomplete="off" placeholder="e.g. 5">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="moreFirst">First ticket number</label>
+            <input type="text" id="moreFirst" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="moreLast">Last ticket number</label>
+            <input type="text" id="moreLast" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+        <button type="submit" class="btn-soft" style="width:100%">Add more numbers</button>
+      </form>
+    </div>
+
+    <div class="screen-only" style="text-align:center">
+      <button type="button" id="resetBtn" class="btn-plain">Start over with new numbers</button>
+    </div>
+  </section>
+
+  <p class="footnote screen-only" style="margin-top:28px">Numbers are drawn with your device's built-in secure random number generator. Your list stays saved on this phone or computer until you press "Start over."</p>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'doorprizes.v1';
+  var MAX_RANGE = 1000000;
+  var DEFAULT_TITLE = 'Door Prize Winners';
+  var DEFAULT_NOTE = 'If your ticket number is here, you won a door prize!';
+
+  function $(id) { return document.getElementById(id); }
+
+  function blank(keep) {
+    return {
+      first: keep ? keep.first : '',
+      last: keep ? keep.last : '',
+      count: keep ? keep.count : '',
+      numbers: [],
+      lastAdded: [],
+      lo: null,
+      hi: null,
+      pad: 0,
+      pickedAt: null,
+      title: keep ? keep.title : DEFAULT_TITLE,
+      note: keep ? keep.note : DEFAULT_NOTE,
+      shape: keep ? keep.shape : 'tall'
+    };
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      if (!s || !Array.isArray(s.numbers)) return null;
+      var b = blank();
+      for (var k in b) if (Object.prototype.hasOwnProperty.call(s, k)) b[k] = s[k];
+      return b;
+    } catch (e) { return null; }
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage unavailable: list lives only in this tab */ }
+  }
+
+  var state = load() || blank();
+
+  // ---- randomness: uniform integer in [0, n) from the secure generator ----
+  function randInt(n) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      var buf = new Uint32Array(1);
+      var limit = 4294967296 - (4294967296 % n);
+      var x;
+      do { window.crypto.getRandomValues(buf); x = buf[0]; } while (x >= limit);
+      return x % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+
+  // Draw k distinct numbers from [first, last], skipping any already taken.
+  function draw(first, last, k, taken) {
+    var pool = [];
+    for (var v = first; v <= last; v++) if (!taken.has(v)) pool.push(v);
+    if (k > pool.length) return null;
+    for (var i = 0; i < k; i++) {
+      var j = i + randInt(pool.length - i);
+      var t = pool[i]; pool[i] = pool[j]; pool[j] = t;
+    }
+    return pool.slice(0, k);
+  }
+
+  function parseWhole(str) {
+    var t = String(str).replace(/[\s,]/g, '');
+    if (!/^\d+$/.test(t)) return null;
+    var n = Number(t);
+    return Number.isSafeInteger(n) ? n : null;
+  }
+
+  function leadingZeroWidth(str) {
+    var t = String(str).replace(/[\s,]/g, '');
+    return (t.length > 1 && t.charAt(0) === '0') ? t.length : 0;
+  }
+
+  function fmt(n) {
+    var s = String(n);
+    while (s.length < state.pad) s = '0' + s;
+    return s;
+  }
+
+  function plural(n, one, many) { return n === 1 ? one : many; }
+
+  // Returns {error} or {first, last, count}
+  function check(firstStr, lastStr, countStr, taken, countWord) {
+    var first = parseWhole(firstStr);
+    var last = parseWhole(lastStr);
+    var count = parseWhole(countStr);
+    if (first === null) return { error: 'Type the first ticket number, using numbers only.', field: 0 };
+    if (last === null) return { error: 'Type the last ticket number, using numbers only.', field: 1 };
+    if (last < first) return { error: 'The last ticket number needs to be bigger than the first one.', field: 1 };
+    if (last - first + 1 > MAX_RANGE) return { error: 'That is more than a million tickets. Check the first and last numbers.', field: 1 };
+    if (count === null || count < 1) return { error: countWord, field: 2 };
+    var available = last - first + 1;
+    if (taken.size) {
+      taken.forEach(function (v) { if (v >= first && v <= last) available--; });
+    }
+    if (count > available) {
+      var msg = taken.size
+        ? 'Only ' + available + ' ' + plural(available, 'ticket is', 'tickets are') + ' left to pick from between ' + fmt(first) + ' and ' + fmt(last) + '.'
+        : 'There ' + plural(available, 'is only 1 ticket', 'are only ' + available + ' tickets') + ' from ' + fmt(first) + ' to ' + fmt(last) + '.';
+      return { error: msg, field: 2 };
+    }
+    return { first: first, last: last, count: count };
+  }
+
+  function showMsg(el, text) {
+    if (text) { el.textContent = text; el.hidden = false; }
+    else { el.textContent = ''; el.hidden = true; }
+  }
+
+  function pickedLabel(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return 'Picked ' + d.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }) +
+      ' at ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '.';
+  }
+
+  // ---- poster layout ----
+  function layoutGrid() {
+    var grid = $('pGrid');
+    var n = grid.children.length;
+    if (!n) return;
+    grid.style.gridTemplateColumns = '';
+    grid.style.gridAutoRows = '';
+    grid.style.fontSize = '';
+    // Leave slack so the rows never exactly fill the box (print engines round differently).
+    var W = grid.clientWidth - 2, H = Math.floor(grid.clientHeight * 0.96);
+    if (W <= 0 || H <= 0) return;
+    var digits = 1;
+    for (var i = 0; i < n; i++) digits = Math.max(digits, grid.children[i].textContent.length);
+    var gap = n > 120 ? 4 : n > 60 ? 6 : n > 24 ? 9 : 12;
+    var best = { fs: 0, cols: 1, rowH: H };
+    for (var cols = 1; cols <= n; cols++) {
+      var rows = Math.ceil(n / cols);
+      var cw = (W - gap * (cols - 1)) / cols;
+      var ch = (H - gap * (rows - 1)) / rows;
+      if (cw <= 0 || ch <= 0) continue;
+      var fs = Math.min(ch * 0.62, (cw * 0.78) / (digits * 0.68), 150);
+      if (fs > best.fs + 0.01) best = { fs: fs, cols: cols, rowH: ch };
+    }
+    var rowH = Math.floor(Math.min(best.rowH, best.fs * 1.9) * 100) / 100;
+    grid.style.gap = gap + 'px';
+    grid.style.gridTemplateColumns = 'repeat(' + best.cols + ', minmax(0, 1fr))';
+    grid.style.gridAutoRows = rowH + 'px';
+    grid.style.fontSize = best.fs.toFixed(2) + 'px';
+  }
+
+  function scalePreview() {
+    var frame = $('posterFrame'), poster = $('poster');
+    if ($('results').hidden) return;
+    var w = poster.offsetWidth, h = poster.offsetHeight;
+    var inset = 12;
+    var avail = frame.clientWidth - inset * 2;
+    if (!w || avail <= 0) return;
+    var s = Math.min(1, avail / w);
+    poster.style.transform = 'scale(' + s + ')';
+    poster.style.left = (inset + Math.max(0, (avail - w * s) / 2)) + 'px';
+    poster.style.top = inset + 'px';
+    frame.style.height = Math.ceil(h * s + inset * 2) + 'px';
+  }
+
+  function renderPoster() {
+    var poster = $('poster');
+    poster.className = 'poster ' + (state.shape === 'wide' ? 'wide' : 'tall');
+    $('pageStyle').textContent = '@page { size: letter ' + (state.shape === 'wide' ? 'landscape' : 'portrait') + '; margin: 0.5in; }';
+
+    var title = (state.title || '').trim();
+    $('pTitle').textContent = title;
+    $('pTitle').hidden = !title;
+    $('pRule').hidden = !title;
+    var note = (state.note || '').trim();
+    $('pNote').textContent = note;
+    $('pNote').hidden = !note;
+
+    var nums = state.numbers.slice().sort(function (a, b) { return a - b; });
+    var fresh = new Set(state.lastAdded || []);
+    var grid = $('pGrid');
+    grid.textContent = '';
+    nums.forEach(function (v) {
+      var d = document.createElement('div');
+      d.className = 'tile' + (fresh.has(v) ? ' is-new' : '');
+      d.textContent = fmt(v);
+      grid.appendChild(d);
+    });
+    layoutGrid();
+    scalePreview();
+  }
+
+  function render() {
+    var has = state.numbers.length > 0;
+    $('setup').hidden = has;
+    $('results').hidden = !has;
+    $('first').value = state.first;
+    $('last').value = state.last;
+    $('count').value = state.count;
+    if (!has) return;
+
+    var n = state.numbers.length;
+    $('summary').textContent = n + ' winning ' + plural(n, 'number', 'numbers') +
+      ', picked from tickets ' + fmt(state.lo) + ' to ' + fmt(state.hi) + '.';
+    $('picked').textContent = pickedLabel(state.pickedAt);
+    $('title').value = state.title;
+    $('note').value = state.note;
+    var radios = document.querySelectorAll('input[name=shape]');
+    for (var i = 0; i < radios.length; i++) radios[i].checked = radios[i].value === (state.shape === 'wide' ? 'wide' : 'tall');
+    $('moreFirst').value = $('moreFirst').value || state.first;
+    $('moreLast').value = $('moreLast').value || state.last;
+    renderPoster();
+  }
+
+  // ---- events ----
+  $('setupForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = $('first').value, l = $('last').value, c = $('count').value;
+    var r = check(f, l, c, new Set(), 'Type how many door prizes you have.');
+    if (r.error) {
+      showMsg($('setupMsg'), r.error);
+      [$('first'), $('last'), $('count')][r.field].focus();
+      return;
+    }
+    showMsg($('setupMsg'), '');
+    var nums = draw(r.first, r.last, r.count, new Set());
+    state.first = f.trim(); state.last = l.trim(); state.count = c.trim();
+    state.pad = Math.max(leadingZeroWidth(f), leadingZeroWidth(l));
+    state.numbers = nums;
+    state.lastAdded = [];
+    state.lo = r.first; state.hi = r.last;
+    state.pickedAt = new Date().toISOString();
+    $('moreFirst').value = state.first;
+    $('moreLast').value = state.last;
+    $('moreCount').value = '';
+    showMsg($('resultMsg'), '');
+    save();
+    render();
+    window.scrollTo(0, 0);
+    $('resultsHead').focus({ preventScroll: true });
+  });
+
+  $('moreForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var taken = new Set(state.numbers);
+    var f = $('moreFirst').value, l = $('moreLast').value, c = $('moreCount').value;
+    var r = check(f, l, c, taken, 'Type how many more numbers you want.');
+    if (r.error) {
+      showMsg($('moreMsg'), r.error);
+      [$('moreFirst'), $('moreLast'), $('moreCount')][r.field].focus();
+      return;
+    }
+    showMsg($('moreMsg'), '');
+    var added = draw(r.first, r.last, r.count, taken);
+    state.pad = Math.max(state.pad, leadingZeroWidth(f), leadingZeroWidth(l));
+    state.numbers = state.numbers.concat(added);
+    state.lastAdded = added.slice();
+    state.lo = Math.min(state.lo, r.first);
+    state.hi = Math.max(state.hi, r.last);
+    $('moreCount').value = '';
+    save();
+    render();
+    var shown = added.slice().sort(function (a, b) { return a - b; }).map(fmt).join(', ');
+    showMsg($('resultMsg'), 'Added ' + added.length + ' more: ' + shown + '. They show in green here (they print like the rest).');
+    window.scrollTo(0, 0);
+    $('resultsHead').focus({ preventScroll: true });
+  });
+
+  $('title').addEventListener('input', function () { state.title = this.value; save(); renderPoster(); });
+  $('note').addEventListener('input', function () { state.note = this.value; save(); renderPoster(); });
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=shape]'), function (r) {
+    r.addEventListener('change', function () { if (this.checked) { state.shape = this.value; save(); renderPoster(); } });
+  });
+
+  $('printBtn').addEventListener('click', function () { window.print(); });
+
+  $('resetBtn').addEventListener('click', function () {
+    if (!window.confirm('This erases the winning numbers on the board so you can pick new ones. Start over?')) return;
+    state = blank(state);
+    $('moreFirst').value = ''; $('moreLast').value = ''; $('moreCount').value = '';
+    showMsg($('resultMsg'), ''); showMsg($('moreMsg'), '');
+    save();
+    render();
+    window.scrollTo(0, 0);
+    $('first').focus();
+  });
+
+  var resizeTimer = null;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(scalePreview, 60);
+  });
+
+  render();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (state.numbers.length) renderPoster(); });
+})();
+</script>
+</body>
+</html>
